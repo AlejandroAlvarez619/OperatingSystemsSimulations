@@ -1,0 +1,52 @@
+# ------------------------------------------------------------
+# Group: Alejandro Alvarez, Bashar Makani
+# Class Accounts: cssc3106, cssc3133
+# Class: CS480, Summer 2026
+# Assignment: Assignment #2, Experimental Shell (xsh)
+# Filename: README
+# ------------------------------------------------------------
+
+File Manifest:
+README - This file describes the project, file manifest, compile instructions, operating instructions, design decisions, extra features, known bugs, lessons learned
+
+main.cpp - Contains main(), the top-level prompt/read/run loop (the "table of contents" for the program)
+
+shell.cpp - Contains the prompt, line reading, command parsing, process creation, and pipe handling
+
+shell.h - Header file with constants and function prototypes shared with main.cpp
+
+Makefile - Compiles the project and creates the executable named xsh
+
+Program Description
+This program is a small experimental shell called xsh. When it starts it prints a prompt made from the username (read from the USER environment variable, so it shows up as "username ") and waits for the user to type a command. xsh can run a program with up to one argument, run a fully qualified program whose path starts with a slash, and build pipelines of commands using the pipe character. It uses fork() to create new processes and execv or execvp to run the programs. For pipelines it creates a pipe() between each pair of commands and connects them with dup2 so the output of one program becomes the input of the next. Typing exit closes the shell down gracefully. Any input that is not one of the allowed formats is rejected, the shell prints an error message, and then it waits for the next command.
+
+Compile Instructions
+To compile the program:
+make
+This will create the executable:
+xsh
+
+Operating Instructions
+To run the program:
+./xsh
+Then type commands at the prompt, for example:
+ls -la
+ls -la | sort -fi | grep .bashrc
+/usr/bin/echo printme
+exit
+
+Program Design
+- Prompt and input: prompt() reads the USER environment variable and prints "username% ". read_line() reads one line and strips the newline. main() stays small and just calls these helpers in a loop, which keeps it readable like a table of contents.
+- Process creation: every command runs in its own child created with fork(). If the program name starts with a slash it is treated as a fully qualified path and run with execv. Otherwise the PATH is searched with execvp. Choosing the exec variant based on the leading slash was the simplest way to handle both cases the assignment asked for.
+- Pipes: run_pipeline() makes one pipe() for the gap between each pair of stages, and each child uses dup2 to read its input from the previous pipe and send its output to the next pipe. The parent closes the pipe ends it does not need and waits for all of the children to finish. This same loop also handles a single command (it just makes no pipe), so there is only one code path.
+- Parsing and valid input: parse() first splits the line on the pipe character, then splits each stage on whitespace into a command and at most one argument. A stage with more than one argument, or an empty stage like "ls |" or "ls || sort", is treated as invalid and the line is rejected. This keeps dsh to only the input formats the assignment allows.
+
+
+Extra Features
+None, the program implements only required functionality.
+
+Known Bugs
+No known bugs.
+
+Lessons Learned
+This was our first time writing our own shell. The biggest thing we learned was how fork(), exec(), pipe(), and dup2() fit together to make one program feed its output into another. At first our pipeline did not work because we forgot to close the pipe ends in the parent, so the reading program never saw end of input and the shell would hang. Once we closed the unused ends and waited for every child, the pipes worked the same as in bash. We also learned the difference between execv and execvp and why a path that starts with a slash should not be searched on the PATH. Handling bad input took some trial and error, since we had to decide what counted as an invalid command and make sure the shell printed an error and came back to the prompt instead of crashing.

@@ -1,0 +1,45 @@
+# ------------------------------------------------------------
+# Group: Alejandro Alvarez, Bashar Makani
+# Class Accounts: cssc3106, cssc3133
+# Class: CS480, Summer 2026
+# Assignment: Assignment #1, Chat Bots
+# Filename: README
+# ------------------------------------------------------------
+
+File Manifest:
+README - This file describes the project, file manifest, compile instructions, operating instructions, design decisions, extra features, known bugs, lessons learned 
+
+bots.cpp - Contains the main program, thread creation, semaphore synchronization, and file operations
+
+bots.h - Header file with function prototypes and global declarations
+
+Makefile - Compiles the project and creates the executable named bots
+
+Program Description
+This program makes 7 POSIX threads that act as chat bots, each thread types outa quote that is saved to a txt file called QUOTE.txt. Even-numbered threads sleep for 2 seconds between writes and output the quote from Brian Kernighan, and odd-numbered threads sleep for 3 seconds and write the quote by Edsger Dijkstra. This happens 8 times for each thread, and then it terminates. To stop multiple threads from writing to the file at once, we used a semaphore named FLAG.
+
+Compile Instructions
+To compile the program:
+make
+This will create the executable:
+bots
+
+Operating Instructions
+To run the program:
+./bots
+Output is then written to QUOTE.txt
+
+Program Design
+- Semaphore Use: A single semaphore (Flag) is used as a mutex around the file write. A thread waits on Flag before writing to QUOTE.txt and posts Flag when it is done, so only one thread writes at a time and the output is never interleaved.
+- Threads: Each thread chooses which quote to print and how long to sleep based on whether its thread number is even or odd. Even sleeps for 2s then produces Kernighan quote. Odd sleeps for 3s then produces Dijkstras quote. Splitting on even/odd was a simple way to give two distinct behaviors to the threads without separate functions.
+- Loop and termination: Each thread repeats its write-and-sleep cycle 8 times, then exits. main() creates all 7 threads and waits for them to finish before the program ends.
+
+Extra Features
+None, the programs implements only required functionality.
+
+Known Bugs
+No known bugs.
+
+Lessons Learned
+This was our first time using threads in C. At first the output in QUOTE.txt was all jumbled together and did not match sample output. We figured out the threads were writing to the file at the same time. Adding the semaphore around the write fixed this issue. Seeing the unorganized output first made it clear why the semaphore was needed. We also learned how to start the threads and use join so the program waits for them to finish. The sleep timers were small but they helped us see the threads take turns and not have deadlocks. Opening and closing the file inside the loop took a little trial and error to get right, but eventually we produced a result that matches the style of the example.
+

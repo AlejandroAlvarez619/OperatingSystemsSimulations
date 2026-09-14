@@ -1,0 +1,66 @@
+# ------------------------------------------------------------
+# Group: Alejandro Alvarez, Bashar Makani
+# Class Accounts: cssc3106, cssc3133
+# Class: CS480, Summer 2026
+# Assignment: Assignment #3, Disk Arm Scheduling (simarm)
+# Filename: README
+# ------------------------------------------------------------
+
+File Manifest:
+README - This file describes the project, file manifest, compile instructions, operating instructions, design decisions, extra features, known bugs, lessons learned
+
+main.cpp - Contains main(), which reads the argument, builds the request sequence, runs the three algorithms, and prints the results
+
+sim.cpp - Contains the random sequence generator and the three disk arm scheduling algorithms (FCFS, SSF, elevator)
+
+sim.h - Header file with constants and the function prototypes shared with main.cpp
+
+Makefile - Compiles the project and creates the executable named simarm
+
+Program Description
+This program is a disk arm scheduling simulation called simarm. The user runs it with one argument that says how many cylinder requests to generate, for example "simarm 64". The program generates that many random cylinder numbers in the range 0 to 999, then runs three disk arm scheduling algorithms on that same sequence and prints the total distance (the number of cylinders) the arm travels in each one.
+
+The three algorithms are:
+- FCFS (First Come First Served): the arm services the requests in the exact order they were generated.
+- SSF (Shortest Seek First): the arm always moves to the closest pending request next.
+- Elevator: the arm keeps moving in one direction servicing requests until there are none left ahead of it, then it reverses and services the rest. It stops at the last request in each direction and does not run to the edge of the disk.
+
+The disk arm is assumed to start at the middle cylinder (500) and the elevator starts by moving up toward the higher cylinders. The starting cylinder and the disk size are defined as constants in sim.h, so they are easy to change.
+
+Compile Instructions
+To compile the program:
+make
+This will create the executable:
+simarm
+
+Operating Instructions
+To run the program with a sequence of N requests:
+./simarm N
+For example:
+./simarm 64
+This generates 64 random cylinder requests and prints the total head movement for FCFS, SSF, and the elevator algorithm. Because the sequence is random, the numbers change from run to run.
+
+Program Design
+- Sequence generation: make_sequence() fills an array with N random cylinder numbers in the range 0 to 999 using rand(). main() seeds rand() once with the current time. The same sequence is passed to all three algorithms so the comparison is fair.
+- FCFS: starting from the start cylinder, the arm moves to each request in generation order. The distance is the sum of the absolute differences between consecutive positions.
+- SSF: the algorithm keeps a "done" flag for each request. From the current position it scans the unfinished requests, picks the closest one, adds that distance, and repeats until every request is serviced.
+- Elevator: the requests are copied and sorted. The arm starts at the start cylinder and sweeps up, servicing every request at or above the start in ascending order. It then reverses and sweeps down, servicing the lower requests in descending order. It only goes as far as the last request in each direction.
+- Output: main() runs each algorithm on the same sequence and prints one labeled line of total head movement for each.
+
+Who Worked On What (Pair Programming)
+We pair programmed this assignment. For each part one of us typed (driver) while the other reviewed and gave input (navigator).
+- main.cpp (argument handling and output): Driver Alejandro, Navigator Bashar
+- make_sequence(): Driver Alejandro, Navigator Bashar
+- fcfs(): Driver Bashar, Navigator Alejandro
+- ssf(): Driver Alejandro, Navigator Bashar
+- elevator(): Driver Bashar, Navigator Alejandro
+- Makefile and README: Driver Bashar, Navigator Alejandro
+
+Extra Features
+None, the program implements only required functionality.
+
+Known Bugs
+No known bugs.
+
+Lessons Learned
+This assignment helped us understand how the choice of disk scheduling algorithm affects how far the disk arm has to move. Writing FCFS first gave us a baseline, and it was clear right away that it moves the arm much more than the others because it never reorders the requests. SSF was straightforward but we could see how it can jump back and forth as long as the next request is close. The elevator took the most thought because we had to handle reversing direction once there were no more requests ahead and make sure the arm stopped at the last request instead of running to the end of the disk. Testing against the example from the textbook gave us confidence that our totals were being calculated correctly. We also learned to seed rand() only once so the sequence is not the same every time the program starts.
